@@ -1,0 +1,103 @@
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Python / FastAPI Backend
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# FastAPI / Uvicorn
+*.log
+
+# =========================
+# Node / Next.js Frontend
+# =========================
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Vercel
+.vercel/
+
+# Production builds
+dist/
+build/
+
+# npm / yarn / pnpm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# IDE / Editors
+# =========================
+.vscode/
+.idea/
+
+# VS Code settings that may contain local config
+*.code-workspace
+
+# =========================
+# Local / Temporary Files
+# =========================
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# =========================
+# Database / Local Data
+# =========================
+*.db
+*.sqlite
+*.sqlite3
+
+# =========================
+# Certificates / Keys
+# =========================
+*.pem
+*.key
+*.crt
+
+# =========================
+# Python environment files
+# =========================
+.python-version
+
+# =========================
+# Coverage / Test artifacts
+# =========================
+.coverage.*
+.pytest_cache/
