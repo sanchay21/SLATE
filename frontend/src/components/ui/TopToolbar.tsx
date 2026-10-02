@@ -1,5 +1,9 @@
-import { useEditor, useValue, DefaultColorStyle, DefaultSizeStyle, DefaultFillStyle } from 'tldraw';
+import { useEditor, useValue, DefaultColorStyle, DefaultSizeStyle, DefaultFillStyle, createShapeId } from 'tldraw';
+import { useState } from 'react';
 import { cn } from '../../lib/utils';
+import { extractContext } from '../../lib/ai/context';
+import { askAi } from '../../lib/ai/client';
+import { getPlacementCoordinates } from '../../lib/ai/placement';
 
 const COLORS = [
   { value: 'black', label: 'Black', hex: '#000000' },
@@ -25,14 +29,52 @@ const FILLS = [
 
 export function TopToolbar() {
   const editor = useEditor();
+  const [isLoading, setIsLoading] = useState(false);
 
   const currentColor = useValue('color', () => editor.getSharedStyles().getAsKnownValue(DefaultColorStyle), [editor]);
   const currentSize = useValue('size', () => editor.getSharedStyles().getAsKnownValue(DefaultSizeStyle), [editor]);
   const currentFill = useValue('fill', () => editor.getSharedStyles().getAsKnownValue(DefaultFillStyle), [editor]);
+  
+  const selectedShapeIds = useValue('selectedShapeIds', () => editor.getSelectedShapeIds(), [editor]);
+  const hasSelection = selectedShapeIds.length > 0;
 
   const setStyle = (style: any, value: any) => {
     editor.setStyleForNextShapes(style, value);
     editor.setStyleForSelectedShapes(style, value);
+  };
+
+  const handleAskAi = async () => {
+    if (!hasSelection || isLoading) return;
+    
+    setIsLoading(true);
+    try {
+      const context = await extractContext(editor, 100);
+      if (!context) return;
+      
+      const response = await askAi(context);
+      
+      const { x, y } = getPlacementCoordinates(editor, context);
+      
+      const id = createShapeId();
+      editor.createShape({
+        id,
+        type: 'ai-draft',
+        x,
+        y,
+        props: {
+          w: 400,
+          h: 300,
+          text: response,
+          isDraft: true
+        }
+      });
+      
+    } catch (e) {
+      console.error(e);
+      alert('Error asking AI.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -103,6 +145,31 @@ export function TopToolbar() {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="h-4 w-px bg-neutral-200" />
+
+      {/* Ask AI */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleAskAi}
+          disabled={!hasSelection || isLoading}
+          className={cn(
+            "px-4 py-2 text-sm font-semibold rounded-md transition-all flex items-center gap-2",
+            hasSelection && !isLoading
+              ? "bg-purple-600 text-white hover:bg-purple-700 shadow-md hover:shadow-lg" 
+              : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
+          )}
+        >
+          {isLoading ? (
+            <>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              Thinking...
+            </>
+          ) : (
+            'Ask AI'
+          )}
+        </button>
       </div>
     </div>
   );
