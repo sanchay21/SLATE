@@ -101,3 +101,5 @@ desktop.ini
 # =========================
 .coverage.*
 .pytest_cache/
+
+supabase_schema.sql
