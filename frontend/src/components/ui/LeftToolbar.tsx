@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEditor, useValue, GeoShapeGeoStyle } from 'tldraw';
 import { 
   MousePointer2, 
@@ -6,14 +7,13 @@ import {
   Eraser, 
   Square, 
   Circle, 
-  Diamond,
-  Triangle,
-  Star,
-  StickyNote,
+  Diamond, 
+  Triangle, 
+  Star, 
+  StickyNote, 
   Minus, 
   ArrowRight, 
-  Type,
-  FileText
+  Type
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { createShapeId } from 'tldraw';
@@ -39,8 +39,11 @@ export function LeftToolbar() {
     { id: 'rich-text', icon: Type, label: 'Text', isAction: true },
   ];
 
+  // Tool divider after specific tool IDs for clean visual hierarchy
+  const dividerAfterIds = new Set(['hand', 'eraser', 'star']);
+
   return (
-    <div className="pointer-events-auto z-50 flex flex-col gap-1 rounded-xl border border-neutral-200 bg-white p-2 shadow-sm max-h-[calc(100vh-2rem)] overflow-y-auto">
+    <div className="pointer-events-auto z-50 flex flex-col gap-0.5 rounded-xl border border-neutral-200/90 bg-white/95 backdrop-blur-md p-1 shadow-lg shadow-neutral-900/5 select-none">
       {tools.map((tool) => {
         const Icon = tool.icon;
         const isActive = tool.geo
@@ -48,36 +51,40 @@ export function LeftToolbar() {
           : currentToolId === tool.id;
         
         return (
-          <button
-            key={tool.id}
-            onClick={() => {
-              if (tool.isAction && tool.id === 'rich-text') {
-                const center = editor.getViewportPageBounds().center;
-                const id = createShapeId();
-                editor.createShape({
-                  id,
-                  type: 'rich-text',
-                  x: center.x - 125,
-                  y: center.y - 50,
-                });
-                editor.setSelectedShapeIds([id]);
-              } else if (tool.geo) {
-                editor.setStyleForNextShapes(GeoShapeGeoStyle, tool.geo as any);
-                editor.setCurrentTool('geo');
-              } else {
-                editor.setCurrentTool(tool.id);
-              }
-            }}
-            title={tool.label}
-            className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
-              isActive
-                ? "bg-blue-100 text-blue-600 font-semibold" 
-                : "text-neutral-600 hover:bg-neutral-100"
+          <React.Fragment key={tool.id}>
+            <button
+              onClick={() => {
+                if (tool.isAction && tool.id === 'rich-text') {
+                  const center = editor.getViewportPageBounds().center;
+                  const id = createShapeId();
+                  editor.createShape({
+                    id,
+                    type: 'rich-text',
+                    x: center.x - 125,
+                    y: center.y - 50,
+                  });
+                  editor.setSelectedShapeIds([id]);
+                } else if (tool.geo) {
+                  editor.setStyleForNextShapes(GeoShapeGeoStyle, tool.geo as any);
+                  editor.setCurrentTool('geo');
+                } else {
+                  editor.setCurrentTool(tool.id);
+                }
+              }}
+              title={tool.label}
+              className={cn(
+                "relative flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150 active:scale-95",
+                isActive
+                  ? "bg-blue-50 text-blue-600 font-semibold shadow-xs border border-blue-200/70" 
+                  : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100/80 border border-transparent"
+              )}
+            >
+              <Icon size={16} strokeWidth={isActive ? 2.25 : 1.75} />
+            </button>
+            {dividerAfterIds.has(tool.id) && (
+              <div className="h-px bg-neutral-200/70 my-0.5 mx-1" />
             )}
-          >
-            <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-          </button>
+          </React.Fragment>
         );
       })}
     </div>

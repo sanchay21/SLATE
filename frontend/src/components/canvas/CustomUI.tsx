@@ -16,7 +16,7 @@ export function CustomUI({ onHighlightShape }: CustomUIProps) {
         <LeftToolbar />
       </div>
       
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full max-w-4xl flex justify-center px-4">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 flex justify-center">
         <TopToolbar />
       </div>
 
