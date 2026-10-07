@@ -1,32 +1,34 @@
-import { useEditor, useValue } from 'tldraw';
+import { useEditor } from 'tldraw';
+import type { TLShapeId } from 'tldraw';
 import { useState, useEffect } from 'react';
 
 export function TagModal({
   shapeId,
   onClose,
 }: {
-  shapeId: string;
+  shapeId: TLShapeId | string;
   onClose: () => void;
 }) {
   const editor = useEditor();
-  const shape = editor.getShape(shapeId);
+  const shape = editor.getShape(shapeId as TLShapeId);
   const [tag, setTag] = useState<string>('');
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    if (shape && shape.meta && typeof shape.meta.tag === 'string') {
-      setTag(shape.meta.tag);
+    if (shape && shape.meta && typeof (shape.meta as any).tag === 'string') {
+      setTag((shape.meta as any).tag);
     }
   }, [shape]);
 
   const handleSave = () => {
+    if (!shape) return;
     if (!tag.trim()) {
       // Allow clearing the tag
       editor.updateShape({
-        id: shapeId,
-        type: shape!.type,
-        meta: { ...shape!.meta, tag: undefined },
-      });
+        id: shape.id,
+        type: shape.type,
+        meta: { ...shape.meta, tag: undefined, slateTag: undefined },
+      } as any);
       onClose();
       return;
     }
@@ -35,7 +37,7 @@ export function TagModal({
 
     // Validate uniqueness
     const allShapes = editor.getCurrentPageShapes();
-    const isDuplicate = allShapes.some((s) => s.id !== shapeId && s.meta?.tag === trimmedTag);
+    const isDuplicate = allShapes.some((s) => s.id !== shape.id && (s.meta as any)?.tag === trimmedTag);
 
     if (isDuplicate) {
       setError('This tag is already in use.');
@@ -43,10 +45,10 @@ export function TagModal({
     }
 
     editor.updateShape({
-      id: shapeId,
-      type: shape!.type,
-      meta: { ...shape!.meta, tag: trimmedTag },
-    });
+      id: shape.id,
+      type: shape.type,
+      meta: { ...shape.meta, tag: trimmedTag, slateTag: trimmedTag },
+    } as any);
     onClose();
   };
 

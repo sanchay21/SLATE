@@ -6,7 +6,7 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
 export type IAiDraftShape = TLBaseShape<
-  'ai-draft',
+  any,
   {
     w: number;
     h: number;
@@ -15,10 +15,10 @@ export type IAiDraftShape = TLBaseShape<
   }
 >;
 
-export class AiDraftShapeUtil extends BaseBoxShapeUtil<IAiDraftShape> {
+export class AiDraftShapeUtil extends BaseBoxShapeUtil<any> {
   static override type = 'ai-draft' as const;
 
-  static override props: RecordProps<IAiDraftShape> = {
+  static override props: RecordProps<any> = {
     w: T.number,
     h: T.number,
     text: T.string,
@@ -83,7 +83,7 @@ export class AiDraftShapeUtil extends BaseBoxShapeUtil<IAiDraftShape> {
             <button
               style={{ padding: '4px 12px', background: '#22c55e', color: '#fff', borderRadius: 4, cursor: 'pointer' }}
               onClick={() => {
-                this.editor.updateShape({ id: shape.id, type: 'ai-draft', props: { isDraft: false } });
+                this.editor.updateShape({ id: shape.id, type: 'ai-draft' as any, props: { isDraft: false } });
               }}
               onPointerDown={(e) => e.stopPropagation()}
             >

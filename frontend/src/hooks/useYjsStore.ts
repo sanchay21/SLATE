@@ -126,7 +126,7 @@ export function useYjsStore({
           });
 
           if (recordsToPut.length > 0) {
-            store.put(recordsToPut, 'remote');
+            store.put(recordsToPut, 'remote' as any);
           }
           if (recordsToRemove.length > 0) {
             store.remove(recordsToRemove);
@@ -153,8 +153,9 @@ export function useYjsStore({
           }
 
           if (hasPresenceUpdate) {
-            const presences = store.query.records('instance_presence').value;
-            const localPresence = presences.find((p) => !remotePresenceIds.has(p.id));
+            const queryResult = (store.query.records('instance_presence') as any);
+            const presences: TLInstancePresence[] = (typeof queryResult?.get === 'function' ? queryResult.get() : queryResult?.value) || [];
+            const localPresence = presences.find((p: any) => !remotePresenceIds.has(p.id));
 
             if (localPresence) {
               const currentInfo = userInfoRef.current;
@@ -188,24 +189,25 @@ export function useYjsStore({
             }
           });
 
-          const currentStorePresences = store.query.records('instance_presence').value;
+          const queryResult = (store.query.records('instance_presence') as any);
+          const currentStorePresences: TLInstancePresence[] = (typeof queryResult?.get === 'function' ? queryResult.get() : queryResult?.value) || [];
           const presencesToRemove = currentStorePresences
-            .filter((p) => remotePresenceIds.has(p.id) && !activeRemoteIds.has(p.id))
-            .map((p) => p.id);
+            .filter((p: any) => remotePresenceIds.has(p.id) && !activeRemoteIds.has(p.id))
+            .map((p: any) => p.id);
 
-          presencesToRemove.forEach((id) => remotePresenceIds.delete(id));
+          presencesToRemove.forEach((id: any) => remotePresenceIds.delete(id));
 
           if (presencesToPut.length > 0) {
-            store.put(presencesToPut, 'remote');
+            store.put(presencesToPut, 'remote' as any);
           }
           if (presencesToRemove.length > 0) {
-            store.remove(presencesToRemove, 'remote');
+            store.remove(presencesToRemove);
           }
         };
 
         provider.awareness.on('change', handleAwarenessChange);
       } else if (status === 'disconnected') {
-        setStoreWithStatus((prev) => ({
+        setStoreWithStatus((prev: any) => ({
           ...prev,
           connectionStatus: 'offline',
         }));

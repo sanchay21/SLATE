@@ -1,10 +1,6 @@
-import { useEditor, useValue, DefaultColorStyle, DefaultSizeStyle, DefaultFillStyle, DefaultFontStyle, DefaultTextAlignStyle, createShapeId } from 'tldraw';
-import { useState } from 'react';
-import { AlignLeft, AlignCenter, AlignRight, Sparkles } from 'lucide-react';
+import { useEditor, useValue, DefaultColorStyle, DefaultSizeStyle, DefaultFillStyle, DefaultFontStyle, DefaultTextAlignStyle } from 'tldraw';
+import { AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { extractContext } from '../../lib/ai/context';
-import { askAi } from '../../lib/ai/client';
-import { getPlacementCoordinates } from '../../lib/ai/placement';
 import type { IRichTextShape } from '../canvas/shapes/RichTextShape';
 
 const COLORS = [
@@ -48,7 +44,6 @@ const ALIGNS = [
 
 export function TopToolbar() {
   const editor = useEditor();
-  const [isLoading, setIsLoading] = useState(false);
 
   const currentColor = useValue('color', () => editor.getSharedStyles().getAsKnownValue(DefaultColorStyle), [editor]);
   const currentSize = useValue('size', () => editor.getSharedStyles().getAsKnownValue(DefaultSizeStyle), [editor]);
@@ -56,64 +51,30 @@ export function TopToolbar() {
   const currentFont = useValue('font', () => editor.getSharedStyles().getAsKnownValue(DefaultFontStyle), [editor]);
   const currentAlign = useValue('align', () => editor.getSharedStyles().getAsKnownValue(DefaultTextAlignStyle), [editor]);
   
-  const selectedShapeIds = useValue('selectedShapeIds', () => editor.getSelectedShapeIds(), [editor]);
   const selectedShapes = useValue('selectedShapes', () => editor.getSelectedShapes(), [editor]);
-  const hasSelection = selectedShapeIds.length > 0;
 
-  const isRichTextSelected = selectedShapes.every((s) => s.type === 'rich-text');
+  const isRichTextSelected = selectedShapes.length > 0 && selectedShapes.every((s) => (s.type as string) === 'rich-text');
   const selectedRichTextShape = isRichTextSelected && selectedShapes.length === 1 
-    ? (selectedShapes[0] as IRichTextShape) 
+    ? (selectedShapes[0] as unknown as IRichTextShape) 
     : null;
 
   const handleRichTextChange = (props: Partial<IRichTextShape['props']>) => {
     if (!isRichTextSelected) return;
     editor.updateShapes(
-      selectedShapes.map((s) => ({
+      selectedShapes.map((s: any) => ({
         id: s.id,
-        type: 'rich-text',
+        type: 'rich-text' as any,
         props: {
           ...s.props,
           ...props,
         },
-      }))
+      })) as any
     );
   };
 
   const setStyle = (style: any, value: any) => {
     editor.setStyleForNextShapes(style, value);
     editor.setStyleForSelectedShapes(style, value);
-  };
-
-  const handleAskAi = async () => {
-    if (!hasSelection || isLoading) return;
-    
-    setIsLoading(true);
-    try {
-      const context = await extractContext(editor, 100);
-      if (!context) return;
-      
-      const response = await askAi(context);
-      const { x, y } = getPlacementCoordinates(editor, context);
-      
-      const id = createShapeId();
-      editor.createShape({
-        id,
-        type: 'ai-draft',
-        x,
-        y,
-        props: {
-          w: 400,
-          h: 300,
-          text: response,
-          isDraft: true
-        }
-      });
-    } catch (e) {
-      console.error(e);
-      alert('Error asking AI.');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -274,8 +235,9 @@ export function TopToolbar() {
       <div className="flex items-center gap-0.5">
         {ALIGNS.map((a) => {
           const Icon = a.icon;
+          const mappedRichTextAlign = a.value === 'start' ? 'left' : a.value === 'middle' ? 'center' : 'right';
           const isActive = isRichTextSelected
-            ? selectedRichTextShape?.props.textAlign === a.value
+            ? selectedRichTextShape?.props.textAlign === mappedRichTextAlign
             : currentAlign === a.value;
 
           return (
@@ -283,7 +245,7 @@ export function TopToolbar() {
               key={a.value}
               onClick={() => {
                 if (isRichTextSelected) {
-                  handleRichTextChange({ textAlign: a.value });
+                  handleRichTextChange({ textAlign: mappedRichTextAlign });
                 } else {
                   setStyle(DefaultTextAlignStyle, a.value);
                 }
@@ -300,35 +262,6 @@ export function TopToolbar() {
             </button>
           );
         })}
-      </div>
-
-      <div className="h-4 w-px bg-neutral-200/80 mx-1 shrink-0" />
-
-      {/* Ask AI */}
-      <div className="flex items-center pl-0.5 shrink-0">
-        <button
-          onClick={handleAskAi}
-          disabled={!hasSelection || isLoading}
-          className={cn(
-            "h-7 px-3.5 text-xs font-medium rounded-lg transition-all duration-150 flex items-center gap-1.5 select-none whitespace-nowrap shrink-0 active:scale-95",
-            hasSelection && !isLoading
-              ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-xs hover:shadow-sm font-semibold" 
-              : "bg-neutral-100/90 text-neutral-400 border border-neutral-200/60 cursor-not-allowed"
-          )}
-          title={hasSelection ? "Generate AI draft based on selection" : "Select an element to ask AI"}
-        >
-          {isLoading ? (
-            <>
-              <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent shrink-0" />
-              <span className="whitespace-nowrap">Thinking...</span>
-            </>
-          ) : (
-            <>
-              <Sparkles size={13} className={cn("shrink-0", hasSelection ? "text-purple-200" : "text-neutral-400")} />
-              <span className="whitespace-nowrap">Ask AI</span>
-            </>
-          )}
-        </button>
       </div>
     </div>
   );

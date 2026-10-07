@@ -2,7 +2,7 @@ import { BaseBoxShapeUtil, HTMLContainer, T } from 'tldraw';
 import type { RecordProps, TLBaseShape } from 'tldraw';
 
 export type IRichTextShape = TLBaseShape<
-  'rich-text',
+  any,
   {
     w: number;
     h: number;
@@ -16,10 +16,10 @@ export type IRichTextShape = TLBaseShape<
   }
 >;
 
-export class RichTextShapeUtil extends BaseBoxShapeUtil<IRichTextShape> {
+export class RichTextShapeUtil extends BaseBoxShapeUtil<any> {
   static override type = 'rich-text' as const;
 
-  static override props: RecordProps<IRichTextShape> = {
+  static override props: RecordProps<any> = {
     w: T.number,
     h: T.number,
     text: T.string,
@@ -28,7 +28,7 @@ export class RichTextShapeUtil extends BaseBoxShapeUtil<IRichTextShape> {
     fontWeight: T.string,
     fontStyle: T.string,
     color: T.string,
-    textAlign: T.string,
+    textAlign: T.string as any,
   };
 
   override canEdit = () => true;
@@ -89,7 +89,7 @@ export class RichTextShapeUtil extends BaseBoxShapeUtil<IRichTextShape> {
             onChange={(e) => {
               this.editor.updateShape({
                 id: shape.id,
-                type: 'rich-text',
+                type: 'rich-text' as any,
                 props: { text: e.currentTarget.value },
               });
             }}

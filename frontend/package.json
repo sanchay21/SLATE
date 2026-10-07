@@ -10,10 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@cometchat/calls-sdk-javascript": "^5.0.6",
+    "@cometchat/chat-sdk-javascript": "^4.2.0",
+    "@cometchat/chat-uikit-react": "^7.2.3",
     "@supabase/supabase-js": "^2.39.3",
     "@tailwindcss/vite": "^4.3.3",
     "autoprefixer": "^10.5.4",
     "clsx": "^2.1.1",
+    "dompurify": "^3.4.16",
+    "katex": "^0.16.10",
     "lucide-react": "^1.29.0",
     "postcss": "^8.5.26",
     "react": "^19.2.8",
@@ -24,11 +29,11 @@
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3",
     "tldraw": "^5.3.0",
-    "katex": "^0.16.10",
     "y-websocket": "^2.0.4",
     "yjs": "^13.6.14"
   },
   "devDependencies": {
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",

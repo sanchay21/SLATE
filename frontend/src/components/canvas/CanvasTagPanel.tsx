@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { CanvasTag } from './CanvasTag';
 import { getAllTaggedShapes, focusTaggedShape } from '../../lib/tags/slateTags';
 import { Bookmark, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { cn } from '../../lib/utils';
 
 interface CanvasTagPanelProps {
   onHighlightShape?: (shapeId: TLShapeId) => void;
@@ -34,8 +33,8 @@ export function CanvasTagPanel({ onHighlightShape }: CanvasTagPanelProps) {
     if (shape.type === 'text') return 'Text';
     if (shape.type === 'draw') return 'Drawing';
     if (shape.type === 'arrow') return 'Arrow';
-    if (shape.type === 'rich-text') return 'Rich Text';
-    if (shape.type === 'ai-draft') return 'AI Draft';
+    if ((shape.type as string) === 'rich-text') return 'Rich Text';
+    if ((shape.type as string) === 'ai-draft') return 'AI Draft';
     if (shape.type === 'note') return 'Note';
     return shape.type;
   };
@@ -47,7 +46,6 @@ export function CanvasTagPanel({ onHighlightShape }: CanvasTagPanelProps) {
       { shapeId, tag },
       {
         duration: 250,
-        inset: 80,
         onHighlight: (id) => {
           if (onHighlightShape) {
             onHighlightShape(id);

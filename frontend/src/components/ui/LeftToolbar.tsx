@@ -13,10 +13,12 @@ import {
   StickyNote, 
   Minus, 
   ArrowRight, 
-  Type
+  Type,
+  ImagePlus
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { createShapeId } from 'tldraw';
+import { openSvgOrImagePicker } from '../../lib/assets/slateAssetHelper';
 
 export function LeftToolbar() {
   const editor = useEditor();
@@ -37,6 +39,7 @@ export function LeftToolbar() {
     { id: 'line', icon: Minus, label: 'Line' },
     { id: 'arrow', icon: ArrowRight, label: 'Arrow' },
     { id: 'rich-text', icon: Type, label: 'Text', isAction: true },
+    { id: 'upload-svg', icon: ImagePlus, label: 'Upload SVG / Image', isUpload: true },
   ];
 
   // Tool divider after specific tool IDs for clean visual hierarchy
@@ -54,16 +57,18 @@ export function LeftToolbar() {
           <React.Fragment key={tool.id}>
             <button
               onClick={() => {
-                if (tool.isAction && tool.id === 'rich-text') {
+                if ((tool as any).isUpload) {
+                  openSvgOrImagePicker(editor);
+                } else if (tool.isAction && tool.id === 'rich-text') {
                   const center = editor.getViewportPageBounds().center;
                   const id = createShapeId();
                   editor.createShape({
                     id,
-                    type: 'rich-text',
+                    type: 'rich-text' as any,
                     x: center.x - 125,
                     y: center.y - 50,
                   });
-                  editor.setSelectedShapeIds([id]);
+                  editor.select(id);
                 } else if (tool.geo) {
                   editor.setStyleForNextShapes(GeoShapeGeoStyle, tool.geo as any);
                   editor.setCurrentTool('geo');

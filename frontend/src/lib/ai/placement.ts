@@ -1,7 +1,7 @@
 import { Editor } from 'tldraw';
 import type { AiContext } from './context';
 
-export function getPlacementCoordinates(editor: Editor, context: AiContext) {
+export function getPlacementCoordinates(_editor: Editor, context: AiContext) {
   const { bounds } = context.metadata;
   const padding = 100;
   

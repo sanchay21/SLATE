@@ -1,20 +1,24 @@
 import type { Editor, TLShape, TLShapeId } from 'tldraw';
 
-const TAG_PREFIX = '@SL-';
-const TAG_CHARACTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluded easily confused chars: 0, O, 1, I
-
 /**
- * Generate a 5-character alphanumeric ID string.
- * Example: '7XK29', 'A92KF'
+ * Determine a clean, human-friendly shape type identifier.
+ * Example: 'rectangle', 'circle', 'triangle', 'star', 'arrow', 'text'
  */
-function generateRandomTagCode(): string {
-  let result = '';
-  const length = 5;
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * TAG_CHARACTERS.length);
-    result += TAG_CHARACTERS[randomIndex];
+export function getShapeTypeName(shape: TLShape): string {
+  if (shape.type === 'geo') {
+    const geo = (shape.props as any)?.geo;
+    if (geo === 'ellipse') return 'circle';
+    if (typeof geo === 'string' && geo.trim()) return geo.toLowerCase();
+    return 'rectangle';
   }
-  return result;
+  if (shape.type === 'image') return 'image';
+  if (shape.type === 'text' || (shape.type as string) === 'rich-text') return 'text';
+  if (shape.type === 'draw') return 'drawing';
+  if (shape.type === 'arrow') return 'arrow';
+  if (shape.type === 'line') return 'line';
+  if (shape.type === 'note') return 'note';
+  if ((shape.type as string) === 'ai-draft') return 'draft';
+  return (shape.type as string) || 'shape';
 }
 
 /**
@@ -26,25 +30,27 @@ export function getExistingTags(editor: Editor): Set<string> {
   for (const shape of shapes) {
     const tag = (shape.meta as any)?.slateTag || (shape.meta as any)?.tag;
     if (typeof tag === 'string' && tag.trim()) {
-      tags.add(tag.trim());
+      tags.add(tag.trim().toLowerCase());
     }
   }
   return tags;
 }
 
 /**
- * Creates a unique Slate tag within the current canvas.
- * Example: '@SL-7XK29'
+ * Creates a unique descriptive Slate tag within the current canvas.
+ * Example: '@rectangle1', '@rectangle2', '@circle1', '@star1'
  */
-export function createSlateTag(editor?: Editor): string {
+export function createSlateTag(editor?: Editor, shape?: TLShape): string {
   const existingTags = editor ? getExistingTags(editor) : new Set<string>();
-  let attempts = 0;
-  let tag = '';
-
-  do {
-    tag = `${TAG_PREFIX}${generateRandomTagCode()}`;
-    attempts++;
-  } while (existingTags.has(tag) && attempts < 1000);
+  const typeName = shape ? getShapeTypeName(shape) : 'shape';
+  
+  // Assign sequential number: @rectangle1, @rectangle2, ...
+  let index = 1;
+  let tag = `@${typeName}${index}`;
+  while (existingTags.has(tag.toLowerCase())) {
+    index++;
+    tag = `@${typeName}${index}`;
+  }
 
   return tag;
 }
@@ -59,7 +65,7 @@ export function getTagForShape(editor: Editor, shapeId: TLShapeId | string): str
 }
 
 /**
- * Resolve a tag string (e.g. '@SL-7XK29') to the corresponding tldraw shape.
+ * Resolve a tag string (e.g. '@rectangle1', '@SL-7XK29') to the corresponding tldraw shape.
  */
 export function resolveTagToShape(editor: Editor, tag: string): TLShape | undefined {
   if (!tag) return undefined;
@@ -73,20 +79,25 @@ export function resolveTagToShape(editor: Editor, tag: string): TLShape | undefi
 }
 
 /**
- * Assigns a unique tag to a shape or returns existing tag.
+ * Assigns a unique descriptive tag to a shape or returns existing tag.
  */
 export function tagShape(editor: Editor, shapeId: TLShapeId | string): string | null {
   const shape = editor.getShape(shapeId as TLShapeId);
   if (!shape) return null;
 
-  // If shape already has a tag, reuse it
+  // If shape already has a clean tag (and not an old legacy @SL- tag), reuse it
   const existingTag = (shape.meta as any)?.slateTag || (shape.meta as any)?.tag;
-  if (existingTag && typeof existingTag === 'string' && existingTag.trim()) {
+  if (
+    existingTag &&
+    typeof existingTag === 'string' &&
+    existingTag.trim() &&
+    !existingTag.trim().toUpperCase().startsWith('@SL-')
+  ) {
     return existingTag.trim();
   }
 
-  // Generate new unique tag
-  const newTag = createSlateTag(editor);
+  // Generate new clean descriptive tag (e.g. @rectangle1, @circle1)
+  const newTag = createSlateTag(editor, shape);
 
   editor.updateShape({
     id: shape.id,
@@ -124,11 +135,10 @@ export interface FocusShapeOptions {
   onHighlight?: (shapeId: TLShapeId) => void;
   onNotFound?: (tag: string) => void;
   duration?: number;
-  inset?: number;
 }
 
 /**
- * Focus and zoom on a shape by ID or tag, and trigger temporary highlight.
+ * Focus on a shape by ID or tag, and trigger temporary highlight without aggressive zooming.
  */
 export function focusTaggedShape(
   editor: Editor,
@@ -153,15 +163,15 @@ export function focusTaggedShape(
   // 1. Select the shape
   editor.select(shape.id);
 
-  // 2. Get bounds and zoom to shape
+  // 2. If the shape is outside the current viewport, gently pan to center it without changing zoom
   const bounds = editor.getShapePageBounds(shape.id);
   if (bounds) {
-    editor.zoomToBounds(bounds, {
-      animation: { duration: options.duration ?? 250 },
-      inset: options.inset ?? 80,
-    });
-  } else {
-    editor.zoomToSelection();
+    const viewport = editor.getViewportPageBounds();
+    if (!viewport.contains(bounds)) {
+      editor.centerOnPoint(bounds.center, {
+        animation: { duration: options.duration ?? 250 },
+      });
+    }
   }
 
   // 3. Trigger highlight overlay

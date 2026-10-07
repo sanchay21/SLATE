@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# CometChat credentials — contains your Auth Key; never commit
+.cometchat/config.json
+.cometchat/

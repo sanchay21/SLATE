@@ -16,9 +16,6 @@ export async function extractContext(editor: Editor, padding: number = 100): Pro
   const bounds = editor.getSelectionPageBounds();
   if (!bounds) return null;
 
-  // Expand bounds by padding
-  const expandedBounds = bounds.clone().expandBy(padding);
-
   const { blob } = await editor.toImage(selectedIds, {
     format: 'png',
     padding,
